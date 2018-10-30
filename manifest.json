@@ -1,0 +1,12 @@
+{
+    "name": "QuickTube",
+    "version": "0.1",
+    "description": "Search YouTube with one click.",
+    "manifest_version": 2,
+
+    "background": {
+        "scripts": ["background.js"],
+        "persistent": false
+    },
+    "permissions": ["https://*.com/*", "contextMenus", "activeTab"]
+}
