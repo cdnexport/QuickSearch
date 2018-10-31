@@ -1,6 +1,6 @@
 {
     "name": "QuickTube",
-    "version": "0.1",
+    "version": "0.2",
     "description": "Search YouTube with one click.",
     "manifest_version": 2,
 
@@ -8,9 +8,14 @@
         "scripts": ["background.js"],
         "persistent": false
     },
-    "permissions": ["<all_urls>", "contextMenus", "activeTab"],
+    "permissions": ["<all_urls>", "contextMenus", "activeTab", "storage"],
     "content_scripts": [{
         "matches": ["<all_urls>"],
         "js": ["injectable.js"]
-    }]
+    }],
+
+    "options_ui": {
+        "page": "./options/options.html",
+        "open_in_tab": false
+    }
 }
