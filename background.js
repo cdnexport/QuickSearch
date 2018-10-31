@@ -1,4 +1,5 @@
 "use strict";
+var link;
 
 function openSearchTab(link) {
     chrome.tabs.create({
@@ -19,7 +20,7 @@ function getLink(searchString, callback) {
     requester.onreadystatechange = function() {
         if (this.readyState === 4 && this.status === 200) {
             const regex = /(\/watch\?v=.{11})/gm;
-            callback(youtubeBaseURL + requester.response.match(regex)[0]);
+            link = youtubeBaseURL + requester.response.match(regex);
         }
         else {
             console.log("Failure");
@@ -40,5 +41,9 @@ chrome.runtime.onInstalled.addListener(function() {
 });
 
 chrome.contextMenus.onClicked.addListener(function (e) {
-    getLink(e.selectionText, openSearchTab);
+    openSearchTab(link);
+});
+
+chrome.runtime.onMessage.addListener(function(request, sender) {
+    getLink(request.searchText);
 });
