@@ -60,7 +60,6 @@ chrome.contextMenus.onClicked.addListener(function (e) {
 chrome.runtime.onMessage.addListener(function(request, sender) {
     chrome.storage.sync.get("searchOption", function(data) {
         searchOption = data.searchOption;
+        getLink(request.searchText);
     });
-
-    getLink(request.searchText);
 });
