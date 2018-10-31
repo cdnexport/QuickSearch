@@ -1,5 +1,11 @@
 "use strict";
 var link;
+var searchOption;
+
+const options = Object.freeze({
+	SEARCHRESULTS: "SearchResults",
+	FIRSTRESULT: "FirstResult"
+});
 
 function openSearchTab(link) {
     chrome.tabs.create({
@@ -14,6 +20,11 @@ function sanitizeSearchString(unpreppedSearchString) {
 function getLink(searchString, callback) {
     const youtubeBaseURL = "https://www.youtube.com";
     const preppedSearchString = sanitizeSearchString(searchString);
+    const searchURL = youtubeBaseURL + "/results?search_query=" + preppedSearchString;
+
+    if (searchOption === options.SEARCHRESULTS) {
+        return link = searchURL;
+    }
     
     var requester = new XMLHttpRequest();
 
@@ -27,7 +38,7 @@ function getLink(searchString, callback) {
         }
     };
 
-    requester.open("GET", youtubeBaseURL + "/results?search_query=" + preppedSearchString, true);
+    requester.open("GET", searchURL, true);
     requester.send();
 }
 
@@ -38,6 +49,8 @@ chrome.runtime.onInstalled.addListener(function() {
         contexts: [context],
         id: "context" + context,
     });
+
+    chrome.storage.sync.set({searchOption: "FirstResult"});
 });
 
 chrome.contextMenus.onClicked.addListener(function (e) {
@@ -45,5 +58,9 @@ chrome.contextMenus.onClicked.addListener(function (e) {
 });
 
 chrome.runtime.onMessage.addListener(function(request, sender) {
+    chrome.storage.sync.get("searchOption", function(data) {
+        searchOption = data.searchOption;
+    });
+
     getLink(request.searchText);
 });
