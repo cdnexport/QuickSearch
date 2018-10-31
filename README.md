@@ -12,4 +12,5 @@ QuickTube is a browser extension that allows users to quickly open the first You
 * Add ESLint.
 * Investigate if this extension could result in an advertisement being returned as the top result.
 * Sanitize the highlighted text properly to prevent XSS attacks.
+* Icons
 * RELEASE!
