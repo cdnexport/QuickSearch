@@ -17,7 +17,7 @@ function sanitizeSearchString(unpreppedSearchString) {
     return unpreppedSearchString.replace(" ","+");
 }
 
-function getLink(searchString, callback) {
+function getLink(searchString) {
     const youtubeBaseURL = "https://www.youtube.com";
     const preppedSearchString = sanitizeSearchString(searchString);
     const searchURL = youtubeBaseURL + "/results?search_query=" + preppedSearchString;
@@ -34,7 +34,7 @@ function getLink(searchString, callback) {
             link = youtubeBaseURL + requester.response.match(regex);
         }
         else {
-            console.log("Failure");
+            console.log("Failed to retrieve youtube data.");
         }
     };
 
@@ -53,11 +53,11 @@ chrome.runtime.onInstalled.addListener(function() {
     chrome.storage.sync.set({searchOption: "FirstResult"});
 });
 
-chrome.contextMenus.onClicked.addListener(function (e) {
+chrome.contextMenus.onClicked.addListener(function () {
     openSearchTab(link);
 });
 
-chrome.runtime.onMessage.addListener(function(request, sender) {
+chrome.runtime.onMessage.addListener(function(request) {
     chrome.storage.sync.get("searchOption", function(data) {
         searchOption = data.searchOption;
         getLink(request.searchText);

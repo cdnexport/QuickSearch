@@ -13,10 +13,5 @@ document.getElementById("SearchResults").addEventListener("change", function() {
 });
 
 chrome.storage.sync.get("searchOption", function(data) {
-    // if (data.searchOption) {
-        document.getElementById(data.searchOption).checked = true;
-    // }
-    // else {
-    //     document.getElementById("FirstResult").checked = true;
-    // }
+    document.getElementById(data.searchOption).checked = true;
 });
