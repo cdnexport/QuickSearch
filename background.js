@@ -1,65 +1,71 @@
 "use strict";
-var link;
-var searchOption;
 
-const options = Object.freeze({
-	SEARCHRESULTS: "SearchResults",
-	FIRSTRESULT: "FirstResult"
-});
-
-function openSearchTab(link) {
-    chrome.tabs.create({
-        url: link
-    });
-}
-
-function sanitizeSearchString(unpreppedSearchString) {
+function prepareSelectionText(unpreppedSearchString) {
     return unpreppedSearchString.replace(" ","+");
 }
 
-function getLink(searchString) {
-    const youtubeBaseURL = "https://www.youtube.com";
-    const preppedSearchString = sanitizeSearchString(searchString);
-    const searchURL = youtubeBaseURL + "/results?search_query=" + preppedSearchString;
-
-    if (searchOption === options.SEARCHRESULTS) {
-        return link = searchURL;
+function search(site, selectionText) {
+    if (site.useEngine) {
+        chrome.storage.sync.get("searchEngine", (response) => {
+            chrome.tabs.create({
+                url: `${response.searchEngine}site:${site.url}+${prepareSelectionText(selectionText)}`
+            });
+        });
     }
-    
-    var requester = new XMLHttpRequest();
-
-    requester.onreadystatechange = function() {
-        if (this.readyState === 4 && this.status === 200) {
-            const regex = /(\/watch\?v=.{11})/gm;
-            link = youtubeBaseURL + requester.response.match(regex);
-        }
-        else {
-            console.log("Failed to retrieve youtube data.");
-        }
-    };
-
-    requester.open("GET", searchURL, true);
-    requester.send();
+    else {
+        chrome.tabs.create({
+            url: `${site.url}${prepareSelectionText(selectionText)}`
+        });
+    }
 }
 
+function buildTree(data, parentId) {
+    for (let i = 0; i < data.length; i++) {
+        const site = data[i];
+
+        chrome.contextMenus.create({
+            id: site.menuId,
+            parentId: parentId,
+            title: site.site,
+            type: "normal",
+            contexts: ["selection"]
+        });
+    }
+}
 chrome.runtime.onInstalled.addListener(function() {
-    var context = "selection";
+    var defaultSites = [
+        {
+            site: "Youtube",
+            url: "https://www.youtube.com/results?search_query=",
+            menuId: "Youtube_0",
+            useEngine: false
+        },
+        {
+            site: "StackOverflow",
+            url: "https://stackoverflow.com/search?q=",
+            menuId: "StackOverflow_0",
+            useEngine: false
+        },
+        {
+            site: "Reddit",
+            url: "reddit.com",
+            menuId: "Reddit_0",
+            useEngine: true
+        }
+    ];
     chrome.contextMenus.create({
-        title: "Search '%s' with QuickTube.",
-        contexts: [context],
-        id: "context" + context,
-    });
+        title: "Quick Search '%s'",
+        contexts: ["selection"],
+        id: "quickSearchSelection",
+    }, () => buildTree(defaultSites, "quickSearchSelection"));
 
-    chrome.storage.sync.set({searchOption: "FirstResult"});
+    chrome.storage.sync.set({sites: defaultSites});
+
+    chrome.storage.sync.set({searchEngine: "https://google.com/search?q="})
 });
 
-chrome.contextMenus.onClicked.addListener(function () {
-    openSearchTab(link);
-});
-
-chrome.runtime.onMessage.addListener(function(request) {
-    chrome.storage.sync.get("searchOption", function(data) {
-        searchOption = data.searchOption;
-        getLink(request.searchText);
+chrome.contextMenus.onClicked.addListener(function (e) {
+    chrome.storage.sync.get('sites', (data) => {
+        search(data.sites.find(element => element.menuId == e.menuItemId), e.selectionText);
     });
 });
