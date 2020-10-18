@@ -1,5 +1,24 @@
 "use strict";
 
+//=== Chrome Actions ===
+function getSites(callback) {
+    chrome.storage.sync.get("sites", (response) => {
+        callback(response.sites);
+    });
+}
+function syncStorage(obj, callback) {
+    chrome.storage.sync.set(obj, callback);
+}
+function createContextMenu(obj, callback) {
+    chrome.contextMenus.create(obj);
+}
+function removeContextMenu(obj, callback) {
+    chrome.contextMenus.remove(obj);
+}
+function updateContextMenu(id, obj, callback) {
+    chrome.contextMenus.update(id, obj);
+}
+
 function addMenu(site, url, sites) {
     const menuId = `${site}_0`;
     sites.push({
@@ -7,9 +26,8 @@ function addMenu(site, url, sites) {
         url: url,
         menuId: menuId
     });
-    chrome.storage.sync.set({sites: sites});
-
-    chrome.contextMenus.create({
+    syncStorage({sites: sites});
+    createContextMenu({
         id: menuId,
         parentId: "quickSearchSelection",
         title: site,
@@ -38,8 +56,8 @@ function deleteButtonClicked(e, sites) {
 
     let filteredSites = sites.filter(site => site.site != removeSite);
 
-    chrome.storage.sync.set({sites: filteredSites});
-    chrome.contextMenus.remove(`${removeSite}_0`);
+    syncStorage({sites: filteredSites})
+    removeContextMenu(`${removeSite}_0`);
 
     row.remove();
 }
@@ -82,11 +100,6 @@ function addRow(site, url, initLoad = false) {
     }
 }
 
-function getSites(callback) {
-    chrome.storage.sync.get("sites", (response) => {
-        callback(response.sites);
-    });
-}
 function loadSites(sites) {
     for (let i = 0; i < sites.length; i++) {
         const element = sites[i];
@@ -106,8 +119,8 @@ function updateRow(newSiteValue, newUrlValue, sites) {
     sites[updateIndex].site = newSiteValue;
     sites[updateIndex].url = newUrlValue;
 
-    chrome.storage.sync.set({sites: sites});
-    chrome.contextMenus.update(`${siteEntryToEdit}_0`, {
+    syncStorage({sites: sites});
+    updateContextMenu(`${siteEntryToEdit}_0`, {
         title: newSiteValue
     });
 
