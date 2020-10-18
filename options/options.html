@@ -7,12 +7,28 @@
             }
         </style>
     </head>
-    <body style="width: 500px; height: 500px"><!-- todo: better sizing -->
+    <body style="width: 500px; height: 500px">
+        <div>
+            <p>This search engine will search the URL provided in the table below for the selected text.</p>
+            <p>Engine Searches are recommended for sites that have poor search capability.</p>
+            <p>It is recommended that the URL set for Engine Searches have no protocol. For example, stackoverflow.com instead of https://stackoverflow.com</p>
+            <label for="engineTxt">Search Engine</label>
+            <select name="engineTxt" id="engineTxt">
+                <option value="https://google.com/search?q=">Google</option>
+                <option value="https://bing.com/search?q=">Bing</option>
+                <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
+                <option value="https://ecosia.org/?q=">Ecosia</option>
+                <option value="https://search.yahoo.com/search?p=">Yahoo!</option>
+                <option value="https://baidu.com/s?wd=">Baidu</option>
+                <option value="https://yandex.com/search/?text=">Yandex</option>
+            </select>
+        </div>
         <table id="siteTable">
             <thead>
                 <tr>
                     <th>Site</th>
                     <th>URL</th>
+                    <th>Use Engine</th>
                     <th></th>
                 </tr>
             </thead>
@@ -25,6 +41,8 @@
             <input id="site" type="text" />
             <label for="url">URL</label>
             <input id="url" type="text" />
+            <label for="useEngine" class="useEngine">Use Engine</label>
+            <input type="checkbox" name="useEngine" id="useEngine">
             <input id="editButton" type="button" value="Add" data-action="add">
             <input id="cancelButton" type="button" value="Cancel" style="visibility: hidden;">
         </span>

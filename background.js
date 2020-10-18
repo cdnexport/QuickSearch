@@ -4,10 +4,19 @@ function prepareSelectionText(unpreppedSearchString) {
     return unpreppedSearchString.replace(" ","+");
 }
 
-function search(url, selectionText) {
-    chrome.tabs.create({
-        url: `${url}${prepareSelectionText(selectionText)}`
-    });
+function search(site, selectionText) {
+    if (site.useEngine) {
+        chrome.storage.sync.get("searchEngine", (response) => {
+            chrome.tabs.create({
+                url: `${response.searchEngine}site:${site.url}+${prepareSelectionText(selectionText)}`
+            });
+        });
+    }
+    else {
+        chrome.tabs.create({
+            url: `${site.url}${prepareSelectionText(selectionText)}`
+        });
+    }
 }
 
 function buildTree(data, parentId) {
@@ -28,12 +37,20 @@ chrome.runtime.onInstalled.addListener(function() {
         {
             site: "Youtube",
             url: "https://www.youtube.com/results?search_query=",
-            menuId: "Youtube_0"
+            menuId: "Youtube_0",
+            useEngine: false
         },
         {
             site: "StackOverflow",
             url: "https://stackoverflow.com/search?q=",
-            menuId: "StackOverflow_0"
+            menuId: "StackOverflow_0",
+            useEngine: false
+        },
+        {
+            site: "Reddit",
+            url: "reddit.com",
+            menuId: "Reddit_0",
+            useEngine: true
         }
     ];
     chrome.contextMenus.create({
@@ -43,10 +60,12 @@ chrome.runtime.onInstalled.addListener(function() {
     }, () => buildTree(defaultSites, "quickSearchSelection"));
 
     chrome.storage.sync.set({sites: defaultSites});
+
+    chrome.storage.sync.set({searchEngine: "https://google.com/search?q="})
 });
 
 chrome.contextMenus.onClicked.addListener(function (e) {
     chrome.storage.sync.get('sites', (data) => {
-        search(data.sites.find(element => element.menuId == e.menuItemId).url, e.selectionText);
+        search(data.sites.find(element => element.menuId == e.menuItemId), e.selectionText);
     });
 });

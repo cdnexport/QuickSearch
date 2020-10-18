@@ -6,6 +6,11 @@ function getSites(callback) {
         callback(response.sites);
     });
 }
+function getEngine(callback) {
+    chrome.storage.sync.get("searchEngine", (response) => {
+        callback(response.searchEngine);
+    });
+}
 function syncStorage(obj, callback) {
     chrome.storage.sync.set(obj, callback);
 }
@@ -20,7 +25,7 @@ function updateContextMenu(id, obj, callback) {
 }
 
 function addMenu(site, sites) {
-    const menuId = `${site.site}_0`;
+    const menuId = `${site.site.replace(" ", "_")}_0`;
     site.menuId = menuId;
     let siteCell = document.evaluate(`//td[text()="${site.site}"]`, document).iterateNext();
     siteCell.setAttribute("data-menuid", menuId);
@@ -42,6 +47,7 @@ function editButtonClicked(e) {
 
     document.querySelector("#site").value =  row.querySelector(".site").innerText;
     document.querySelector("#url").value =  row.querySelector(".url").innerText;
+    document.querySelector("#useEngine").checked =  (row.querySelector(".useEngine").innerText == "Yes");
     var btn = document.querySelector("#editButton");
     btn.setAttribute("data-action", "update");
     btn.value = "Update";
@@ -67,12 +73,15 @@ function addRow(site, initLoad = false) {
 
     let siteCell = document.createElement("td");
     let urlCell = document.createElement("td");
+    let useEngineCell = document.createElement("td");
     let btnCell = document.createElement("td");
     let deleteBtnCell = document.createElement("td");
     siteCell.innerText = site.site;
     siteCell.classList.add("site");
     urlCell.innerText = site.url;
     urlCell.classList.add("url");
+    useEngineCell.innerText = site.useEngine ? "Yes" : "No";
+    useEngineCell.classList.add("useEngine");
 
     let editButton = document.createElement("button");
     editButton.innerText = "Edit";
@@ -90,12 +99,13 @@ function addRow(site, initLoad = false) {
     let newRow = document.createElement("tr");
     newRow.appendChild(siteCell);
     newRow.appendChild(urlCell);
+    newRow.appendChild(useEngineCell);
     newRow.appendChild(btnCell);
     newRow.appendChild(deleteBtnCell);
     tableBody.appendChild(newRow);
 
     if (!initLoad) {
-        getSites((sites) => addMenu({site: site.site, url: site.url}, sites));
+        getSites((sites) => addMenu(site, sites));
         defaultEditForm();
     }
     else {
@@ -113,22 +123,28 @@ function loadSites(sites) {
 function validateData() {//todo: implement
     return {valid: true, message: "success"};
 }
+function validateEngine() {//todo: implement
+    return {valid: true, message: "success"};
+}
 
-function updateRow(newSiteValue, newUrlValue, sites) {
+function updateRow(newSite, sites) {
     let siteCell = document.evaluate(`//td[text()="${siteEntryToEdit}"]`, document).iterateNext();
     let urlCell = siteCell.parentNode.querySelector(".url");
+    let useEngineCell = siteCell.parentNode.querySelector(".useEngine");
 
     let updateIndex = sites.findIndex(element => element.site == siteEntryToEdit);
-    sites[updateIndex].site = newSiteValue;
-    sites[updateIndex].url = newUrlValue;
+    sites[updateIndex].site = newSite.site;
+    sites[updateIndex].url = newSite.url;
+    sites[updateIndex].useEngine = newSite.useEngine;
 
     syncStorage({sites: sites});
     updateContextMenu(siteCell.getAttribute("data-menuid"), {
-        title: newSiteValue
+        title: newSite.site
     });
 
-    siteCell.innerText = newSiteValue;
-    urlCell.innerText = newUrlValue;
+    siteCell.innerText = newSite.site;
+    urlCell.innerText = newSite.url;
+    useEngineCell.innerText = newSite.useEngine ? "Yes" : "No";
 
     defaultEditForm();
 }
@@ -137,6 +153,7 @@ function defaultEditForm() {
     siteEntryToEdit = null;
     document.querySelector("#site").value = "";
     document.querySelector("#url").value = "";
+    document.querySelector("#useEngine").checked = false;
     document.querySelector("#editButton").value = "Add";
     document.querySelector("#editButton").setAttribute("data-action", "add");
     document.querySelector("#cancelButton").style.visibility = "hidden";
@@ -144,6 +161,7 @@ function defaultEditForm() {
 
 document.addEventListener("DOMContentLoaded", () => {
     getSites((sites) => loadSites(sites));
+    getEngine((engine) => document.querySelector("#engineTxt").value = engine);
     document.querySelector("#editButton").addEventListener("click", (e) => {
         var validation = validateData();
         if (validation.valid) {
@@ -156,15 +174,29 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             else if (action === "update") {
                 getSites((sites) => {
-                    updateRow(
-                        document.querySelector("#site").value,
-                        document.querySelector("#url").value,
-                        sites
-                    );
+                    updateRow({
+                        site: document.querySelector("#site").value,
+                        url: document.querySelector("#url").value,
+                        useEngine: document.querySelector("#useEngine").checked
+                    }, sites);
                 });
             }
         }
+        else {
+            console.log(validation.message);
+        }
     });
+    document.querySelector("#engineTxt").addEventListener("change", (e) => {
+        var validation = validateEngine();
+        if (validation.valid) {
+            syncStorage({
+                searchEngine: document.querySelector("#engineTxt").value
+            });
+        }
+        else {
+            console.log(validation.message);
+        }
+    })
 
     document.querySelector("#cancelButton").addEventListener("click", defaultEditForm);
 });
