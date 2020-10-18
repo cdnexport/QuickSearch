@@ -10,17 +10,17 @@ function syncStorage(obj, callback) {
     chrome.storage.sync.set(obj, callback);
 }
 function createContextMenu(obj, callback) {
-    chrome.contextMenus.create(obj);
+    chrome.contextMenus.create(obj, callback);
 }
 function removeContextMenu(menuId, callback) {
-    chrome.contextMenus.remove(menuId);
+    chrome.contextMenus.remove(menuId, callback);
 }
 function updateContextMenu(id, obj, callback) {
-    chrome.contextMenus.update(id, obj);
+    chrome.contextMenus.update(id, obj, callback);
 }
 
 function addMenu(site, sites) {
-    const menuId = `${site}_0`;
+    const menuId = `${site.site}_0`;
     site.menuId = menuId;
     let siteCell = document.evaluate(`//td[text()="${site.site}"]`, document).iterateNext();
     siteCell.setAttribute("data-menuid", menuId);
