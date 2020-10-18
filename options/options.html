@@ -7,7 +7,7 @@
             }
         </style>
     </head>
-    <body>
+    <body style="width: 500px; height: 500px"><!-- todo: better sizing -->
         <table id="siteTable">
             <thead>
                 <tr>
@@ -25,7 +25,8 @@
             <input id="site" type="text" />
             <label for="url">URL</label>
             <input id="url" type="text" />
-            <input id="addButton" type="button" value="Add Site">
+            <input id="editButton" type="button" value="Add" data-action="add">
+            <input id="cancelButton" type="button" value="Cancel" style="visibility: hidden;">
         </span>
     </body>
     <script src="options.js"></script>
