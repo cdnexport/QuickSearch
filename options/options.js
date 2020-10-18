@@ -1,17 +1,34 @@
 "use strict";
 
-document.getElementById("FirstResult").addEventListener("change", function() {
-    if (document.getElementById("FirstResult").checked) {
-        chrome.storage.sync.set({searchOption: "FirstResult"});
-    }
-});
+function addRow(site, url) {
+    const siteTable = document.querySelector("#siteTable");
 
-document.getElementById("SearchResults").addEventListener("change", function() {
-    if (document.getElementById("SearchResults").checked) {
-        chrome.storage.sync.set({searchOption: "SearchResults"});
-    }
-});
+    let siteCell = document.createElement("td");
+    let urlCell = document.createElement("td");
+    let btnCell = document.createElement("td");
+    siteCell.innerText = site;
+    urlCell.innerText = url;
+    let editButton = document.createElement("button");
+    editButton.innerText = "Edit";
+    btnCell.appendChild(editButton);
 
-chrome.storage.sync.get("searchOption", function(data) {
-    document.getElementById(data.searchOption).checked = true;
+    const tableBody = siteTable.querySelector("tbody");
+    let newRow = document.createElement("tr");
+    newRow.appendChild(siteCell);
+    newRow.appendChild(urlCell);
+    newRow.appendChild(btnCell);
+    tableBody.appendChild(newRow);
+}
+
+function loadSites() {
+    chrome.storage.sync.get("sites", (response) => {
+        console.log(response);
+        for (let i = 0; i < response.sites.length; i++) {
+            const element = response.sites[i];
+            addRow(element.site, element.url);
+        }
+    });
+}
+document.addEventListener("DOMContentLoaded", () => {
+    loadSites();
 });

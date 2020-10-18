@@ -8,13 +8,24 @@
         </style>
     </head>
     <body>
-        <span>
-            <input type="radio" name="option" id="FirstResult" value="FirstResult" />
-            <label for="FirstResult">Open first YouTube video from search results in new tab.</label>
-        </span>
-        <span>
-            <input type="radio" name="option" id="SearchResults" value="SearchResults" />
-            <label for="SearchResults">Open YouTube search results in new tab.</label>
+        <table id="siteTable">
+            <thead>
+                <tr>
+                    <th>Site</th>
+                    <th>URL</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+        <span id="editForm">
+            <label for="Site">Site</label>
+            <input type="text" />
+            <label for="Url">URL</label>
+            <input type="Url" />
+            <input type="button" value="Update">
         </span>
     </body>
     <script src="options.js"></script>

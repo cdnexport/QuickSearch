@@ -1,7 +1,7 @@
 {
-    "name": "QuickTube",
+    "name": "QuickSearch",
     "version": "0.2",
-    "description": "Search YouTube with one click.",
+    "description": "Quickly open a search tab for any website.",
     "manifest_version": 2,
 
     "background": {
@@ -9,11 +9,6 @@
         "persistent": false
     },
     "permissions": ["<all_urls>", "contextMenus", "activeTab", "storage"],
-    "content_scripts": [{
-        "matches": ["<all_urls>"],
-        "js": ["content-script.js"]
-    }],
-
     "options_ui": {
         "page": "./options/options.html",
         "open_in_tab": false
