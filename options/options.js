@@ -12,25 +12,25 @@ function syncStorage(obj, callback) {
 function createContextMenu(obj, callback) {
     chrome.contextMenus.create(obj);
 }
-function removeContextMenu(obj, callback) {
-    chrome.contextMenus.remove(obj);
+function removeContextMenu(menuId, callback) {
+    chrome.contextMenus.remove(menuId);
 }
 function updateContextMenu(id, obj, callback) {
     chrome.contextMenus.update(id, obj);
 }
 
-function addMenu(site, url, sites) {
+function addMenu(site, sites) {
     const menuId = `${site}_0`;
-    sites.push({
-        site: site,
-        url: url,
-        menuId: menuId
-    });
+    site.menuId = menuId;
+    let siteCell = document.evaluate(`//td[text()="${site.site}"]`, document).iterateNext();
+    siteCell.setAttribute("data-menuid", menuId);
+
+    sites.push(site);
     syncStorage({sites: sites});
     createContextMenu({
         id: menuId,
         parentId: "quickSearchSelection",
-        title: site,
+        title: site.site,
         type: "normal",
         contexts: ["selection"]
     });
@@ -52,26 +52,26 @@ function editButtonClicked(e) {
 function deleteButtonClicked(e, sites) {
     let row = e.target.parentNode.parentNode;
 
-    let removeSite =  row.querySelector(".site").innerText;
+    let menuId =  row.querySelector(".site").getAttribute("data-menuid");
 
-    let filteredSites = sites.filter(site => site.site != removeSite);
+    let filteredSites = sites.filter(site => site.menuId != menuId);
 
     syncStorage({sites: filteredSites})
-    removeContextMenu(`${removeSite}_0`);
+    removeContextMenu(menuId);
 
     row.remove();
 }
 
-function addRow(site, url, initLoad = false) {
+function addRow(site, initLoad = false) {
     const siteTable = document.querySelector("#siteTable");
 
     let siteCell = document.createElement("td");
     let urlCell = document.createElement("td");
     let btnCell = document.createElement("td");
     let deleteBtnCell = document.createElement("td");
-    siteCell.innerText = site;
+    siteCell.innerText = site.site;
     siteCell.classList.add("site");
-    urlCell.innerText = url;
+    urlCell.innerText = site.url;
     urlCell.classList.add("url");
 
     let editButton = document.createElement("button");
@@ -95,15 +95,18 @@ function addRow(site, url, initLoad = false) {
     tableBody.appendChild(newRow);
 
     if (!initLoad) {
-        getSites((sites) => addMenu(site, url, sites));
+        getSites((sites) => addMenu({site: site.site, url: site.url}, sites));
         defaultEditForm();
+    }
+    else {
+        siteCell.setAttribute("data-menuid", site.menuId);
     }
 }
 
 function loadSites(sites) {
     for (let i = 0; i < sites.length; i++) {
         const element = sites[i];
-        addRow(element.site, element.url, true);
+        addRow(element, true);
     }
 }
 
@@ -120,7 +123,7 @@ function updateRow(newSiteValue, newUrlValue, sites) {
     sites[updateIndex].url = newUrlValue;
 
     syncStorage({sites: sites});
-    updateContextMenu(`${siteEntryToEdit}_0`, {
+    updateContextMenu(siteCell.getAttribute("data-menuid"), {
         title: newSiteValue
     });
 
@@ -146,10 +149,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (validation.valid) {
             let action = e.target.getAttribute("data-action");
             if (action === "add") {
-                addRow(
-                    document.querySelector("#site").value,
-                    document.querySelector("#url").value
-                );
+                addRow({
+                    site: document.querySelector("#site").value,
+                    url: document.querySelector("#url").value
+                });
             }
             else if (action === "update") {
                 getSites((sites) => {
