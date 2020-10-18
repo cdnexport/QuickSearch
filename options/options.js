@@ -1,15 +1,14 @@
 "use strict";
 
-function addMenu(site, url) {
+function addMenu(site, url, sites) {
     const menuId = `${site}_0`;
-    chrome.storage.sync.get("sites", (response) => {
-        response.sites.push({
-            site: site,
-            url: url,
-            menuId: menuId
-        });
-        chrome.storage.sync.set({sites: response.sites});
+    sites.push({
+        site: site,
+        url: url,
+        menuId: menuId
     });
+    chrome.storage.sync.set({sites: sites});
+
     chrome.contextMenus.create({
         id: menuId,
         parentId: "quickSearchSelection",
@@ -22,7 +21,7 @@ function addMenu(site, url) {
 var siteEntryToEdit = null;
 function editButtonClicked(e) {
     let row = e.target.parentNode.parentNode;
-    console.log(row);
+
     document.querySelector("#site").value =  row.querySelector(".site").innerText;
     document.querySelector("#url").value =  row.querySelector(".url").innerText;
     var btn = document.querySelector("#editButton");
@@ -30,19 +29,17 @@ function editButtonClicked(e) {
     btn.value = "Update";
     document.querySelector("#cancelButton").style.visibility = "visible";
     siteEntryToEdit = row.querySelector(".site").innerText;
-    console.log(siteEntryToEdit);
 }
 
-function deleteButtonClicked(e) {
+function deleteButtonClicked(e, sites) {
     let row = e.target.parentNode.parentNode;
 
     let removeSite =  row.querySelector(".site").innerText;
-    chrome.storage.sync.get("sites", (response) => {
-        let sites = response.sites.filter(site => site.site != removeSite);
 
-        chrome.storage.sync.set({sites: sites});
-        chrome.contextMenus.remove(`${removeSite}_0`);
-    });
+    let filteredSites = sites.filter(site => site.site != removeSite);
+
+    chrome.storage.sync.set({sites: filteredSites});
+    chrome.contextMenus.remove(`${removeSite}_0`);
 
     row.remove();
 }
@@ -68,7 +65,7 @@ function addRow(site, url, initLoad = false) {
     let deleteButton = document.createElement("button");
     deleteButton.innerText = "Delete";
     deleteButton.classList.add("delete");
-    deleteButton.addEventListener("click", deleteButtonClicked);
+    deleteButton.addEventListener("click", (e) => getSites((sites) => deleteButtonClicked(e, sites)));
     deleteBtnCell.appendChild(deleteButton);
 
     const tableBody = siteTable.querySelector("tbody");
@@ -80,45 +77,44 @@ function addRow(site, url, initLoad = false) {
     tableBody.appendChild(newRow);
 
     if (!initLoad) {
-        addMenu(site, url);
+        getSites((sites) => addMenu(site, url, sites));
         defaultEditForm();
     }
 }
 
-function loadSites() {
+function getSites(callback) {
     chrome.storage.sync.get("sites", (response) => {
-        for (let i = 0; i < response.sites.length; i++) {
-            const element = response.sites[i];
-            addRow(element.site, element.url, true);
-        }
+        callback(response.sites);
     });
+}
+function loadSites(sites) {
+    for (let i = 0; i < sites.length; i++) {
+        const element = sites[i];
+        addRow(element.site, element.url, true);
+    }
 }
 
 function validateData() {//todo: implement
     return {valid: true, message: "success"};
 }
 
-function updateRow(site, url) {
+function updateRow(newSiteValue, newUrlValue, sites) {
     let siteCell = document.evaluate(`//td[text()="${siteEntryToEdit}"]`, document).iterateNext();
     let urlCell = siteCell.parentNode.querySelector(".url");
-    chrome.storage.sync.get("sites", (response) => {
-        let sites = response.sites;
-        console.log(siteEntryToEdit);
-        let updateIndex = sites.findIndex(element => element.site == siteEntryToEdit);
-        console.log(updateIndex);
-        sites[updateIndex].site = site;
-        sites[updateIndex].url = url;
 
-        chrome.storage.sync.set({sites: sites});
-        chrome.contextMenus.update(`${siteEntryToEdit}_0`, {
-            title: site
-        });
+    let updateIndex = sites.findIndex(element => element.site == siteEntryToEdit);
+    sites[updateIndex].site = newSiteValue;
+    sites[updateIndex].url = newUrlValue;
 
-        siteCell.innerText = site;
-        urlCell.innerText = url;
-
-        defaultEditForm();
+    chrome.storage.sync.set({sites: sites});
+    chrome.contextMenus.update(`${siteEntryToEdit}_0`, {
+        title: newSiteValue
     });
+
+    siteCell.innerText = newSiteValue;
+    urlCell.innerText = newUrlValue;
+
+    defaultEditForm();
 }
 
 function defaultEditForm() {
@@ -131,7 +127,7 @@ function defaultEditForm() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    loadSites();
+    getSites((sites) => loadSites(sites));
     document.querySelector("#editButton").addEventListener("click", (e) => {
         var validation = validateData();
         if (validation.valid) {
@@ -143,10 +139,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
             }
             else if (action === "update") {
-                updateRow(
-                    document.querySelector("#site").value,
-                    document.querySelector("#url").value
-                );
+                getSites((sites) => {
+                    updateRow(
+                        document.querySelector("#site").value,
+                        document.querySelector("#url").value,
+                        sites
+                    );
+                });
             }
         }
     });
