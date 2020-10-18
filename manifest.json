@@ -8,7 +8,7 @@
         "scripts": ["background.js"],
         "persistent": false
     },
-    "permissions": ["<all_urls>", "contextMenus", "activeTab", "storage"],
+    "permissions": ["contextMenus", "activeTab", "storage"],
     "options_ui": {
         "page": "./options/options.html",
         "open_in_tab": false
